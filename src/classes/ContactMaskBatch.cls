@@ -37,16 +37,21 @@ global class ContactMaskBatch implements Database.Batchable<sObject>, Database.S
 	}
 
 	global void finish(Database.BatchableContext BC) {
-		String alert = 'Errors on ContactMaskBatch for ' + mask + '.';
+		String subject = 'ContactMaskBatch for ' + mask;
 		List<String> content = new List<String>();
-		content.add(alert + '\n');
+		content.add(subject + '\n');
+
+		if (errors.isEmpty()) {
+			content.add(subject + ' completed successfully with no errors.');
+		}
+
 		for(Error err : errors) {
 			content.add(err.toString());
 		}
 
 		Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
 		message.setToAddresses(new List<Id>{ UserInfo.getUserId() });
-		message.setSubject(alert);
+		message.setSubject(subject);
 		message.setPlainTextBody(String.join(content, '\n'));
 		Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ message });
 	}
