@@ -4,7 +4,7 @@ global class ContactMaskBatch implements Database.Batchable<sObject>, Database.S
 	private List<Error> errors = new List<Error>();
 
 	global ContactMaskBatch(String mask) {
-		this.mask = mask.trim().replace(' ', '').toLowerCase();
+		this.mask = '.' + mask.trim().replace(' ', '').toLowerCase();
 	}
 
 	global ContactMaskBatch(SandboxContext ctx) {
@@ -12,17 +12,19 @@ global class ContactMaskBatch implements Database.Batchable<sObject>, Database.S
 	}
 
 	global Database.QueryLocator start(Database.BatchableContext BC) {
+		String likeMask = '%' + mask;
 		return Database.getQueryLocator([
 			SELECT Email
 			FROM Contact
-			WHERE Email != null]);
+			WHERE Email != null
+				AND (NOT Email LIKE :likeMask)]);
 	}
 
 	global void execute(Database.BatchableContext BC, List<Contact> scope) {
 
 		List<Contact> maskedContacts = new List<Contact>();
 		for(Contact con : scope) {
-			con.Email = con.Email.unescapeHtml4() + '.' + mask;
+			con.Email = con.Email.unescapeHtml4() + mask;
 			maskedContacts.add(con);
 		}
 
